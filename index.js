@@ -1,7 +1,5 @@
 require('dotenv').config()
 const { App, LogLevel } = require('@slack/bolt');
-const { MentionsCounter } = require('./store.js');
-const { SlackMessageUtil, SlackUtil } = require('./slackUtil.js');
 
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
