@@ -1,0 +1,33 @@
+cheer server is listening on 3001
+proxy server is listening on 5017
+⚡️ Bolt app is running!
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 0
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 0
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 0
+
+ Added Reaction:  clap 1589745139.001000
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 1
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 1
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 1
+------------------------------------------
+target:--- http://localhost:3001/cheers
+Cheeer server received request:  GET
+clap 0
