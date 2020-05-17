@@ -11,7 +11,6 @@ const withAuth = api_method => (obj) => api_method({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     ...obj
 });
-const slackUtil = new SlackUtil(withAuth(app.client.conversations.history), withAuth(app.client.users.list), 10000, 10000);
 
 const reactionToSounds = {
     "clap" : {
