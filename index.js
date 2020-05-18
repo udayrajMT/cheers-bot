@@ -7,12 +7,14 @@ const https = require("http"),
     httpProxy = require("http-proxy"),
     HttpProxyRules = require("http-proxy-rules");
 
+const CLIENT_PORT = process.env.CLIENT_PORT || 3002;
 const SERVER_PORT = process.env.SERVER_PORT || 3001;
 const BOT_PORT = process.env.BOT_PORT || 3000;
 
 const proxyRules = new HttpProxyRules({
     rules: {
-        "/cheers": `http://localhost:${SERVER_PORT}/cheers`
+        "/cheers": `http://localhost:${SERVER_PORT}/cheers`,
+        "/": `http://localhost:${CLIENT_PORT}/`
     },
     default: `http://localhost:${BOT_PORT}`
 });
@@ -61,19 +63,26 @@ Okay how to implement it?
                 >
  */
 
-const cheerTimes = {
-    "clap" : []
-};
 
 // This object will be shared by client and server
 const cheerCollection = {
     "clap": {
-        "time_window": 3000,
-        // "file": "applause.mp3",
-        // "trigger_count": 5,
-        // "scale": "linear"
+        "name": "Applause",
+        // "file": applauseFile,
+        "time_window": 10000,
+        "trigger_count": 1,
+        "scale": "linear"
+    },
+    "joy": {
+        "name": "Laughter",
+        // "file": laughterFile,
+        "time_window": 10000,
+        "trigger_count": 1,
+        "scale": "linear"
     }
 };
+
+const cheerTimes = Object.keys(cheerCollection).reduce((obj, key)=>{obj[key]= []; return obj}, {});
 
 const isInWindow = (reaction, ref_ts, event_ts) => {
     const diff = ref_ts - event_ts;
@@ -99,35 +108,6 @@ const getCheerCounts = () => {
     }
     return cheerCounts;
 }
-
-/* Client Part */
-
-const clamp = function (number, min, max) {
-    return Math.min(Math.max(number, min), max);
-};
-const VOLUME_SCALE = 1000;
-
-const getVolume = (reaction, count) => {
-    if (cheerCollection[reaction]["trigger_count"] > count)
-        return 0;
-    //TODO: implement volume function, based on range_counts = [0,1000] (multiple claps by a person possible)
-    switch (cheerCollection[reaction]["scale"]){
-        case "linear":
-            return clamp(volume, 0, VOLUME_SCALE);
-        default:
-            return 100;
-    }
-}
-const setVolume = (ref, volume) => {
-    ref.setVolume(volume / VOLUME_SCALE);
-}
-
-const processCheerCounts = (cheerCounts) =>{
-    for (let reaction in cheerCollection) {
-        // setVolume(audioRefs[reaction], getVolume(reaction, cheerCounts[reaction]));
-    }
-}
-/* End Client Part */
 
 app.event('reaction_added', async ({ context, event }) => {
     console.log('\n Added Reaction: ', event.reaction, event.event_ts);
@@ -180,7 +160,7 @@ https
     .createServer((req, res) => {
         let target = proxyRules.match(req);
         console.log("------------------------------------------");
-        console.log("target:---", target);
+        console.log(`target:--- ${target}`);
         return proxy.web(req, res, {
             changeOrigin: true,
             target: target,
