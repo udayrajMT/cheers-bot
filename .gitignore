@@ -3,7 +3,7 @@
 **/.vscode
 **/data
 **/.DS_Store
-proxy.log
+**/proxy.log
 
 # Will intend to use it when it's actually stable and minimal: 
 # https://yarnpkg.com/advanced/qa#which-files-should-be-gitignored

@@ -9,7 +9,7 @@ const cheerCollection = {
     "name" : "Applause",
     "file": applauseFile,
     "time_window": 10000,
-    "trigger_count": 1,
+    "trigger_count": 5,
     "scale": "linear"
   },
   "joy": {

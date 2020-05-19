@@ -2,8 +2,10 @@ require('dotenv').config()
 const { App, LogLevel } = require('@slack/bolt');
 const events = require('events');
 const eventHandler = new events.EventEmitter();
+const { InstallProvider } = require('@slack/oauth');
 
 const https = require("http"),
+    url = require("url"),
     httpProxy = require("http-proxy"),
     HttpProxyRules = require("http-proxy-rules");
 
@@ -11,14 +13,7 @@ const CLIENT_PORT = process.env.CLIENT_PORT || 3002;
 const SERVER_PORT = process.env.SERVER_PORT || 3001;
 const BOT_PORT = process.env.BOT_PORT || 3000;
 
-const proxyRules = new HttpProxyRules({
-    rules: {
-        "/cheers": `http://localhost:${SERVER_PORT}/cheers`,
-        "/": `http://localhost:${CLIENT_PORT}/`
-    },
-    default: `http://localhost:${BOT_PORT}`
-});
-
+/* BOT SERVER */
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -29,6 +24,41 @@ const withAuth = api_method => (obj) => api_method({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     ...obj
 });
+
+app.event('reaction_added', async ({ context, event }) => {
+    console.log('\n Added Reaction: ', event.reaction, event.event_ts);
+    eventHandler.emit('cheered', event);
+});
+
+app.event('reaction_removed', async ({ context, event }) => {
+    console.log('\n Removed Reaction: ', event.reaction, event.event_ts);
+    eventHandler.emit('cheered', event);
+});
+
+
+eventHandler.on('cheered', function ({ reaction }) {
+    // let only supported reactions pass through -
+    if (!cheerCollection[reaction])
+        return;
+
+    // get server time
+    const server_ts = Date.now();
+    cheerTimes[reaction] = cheerTimes[reaction] || [];
+    // Nope -  need mutex lock here?
+    // > JS is single-threaded and it won't switch between function bodies without reaching its return statement :
+    cheerTimes[reaction].push(server_ts);
+});
+
+(async () => {
+    // Start your app
+    await app.start(BOT_PORT);
+    console.log('⚡️ Bolt app is running!');
+})();
+
+
+
+/* CHEER SERVER */
+const CHEER_UPDATE_INTERVAL = 250;
 
 
 // No need! timestamp should be the only criterion - // How to get most recent message -
@@ -82,7 +112,7 @@ const cheerCollection = {
     }
 };
 
-const cheerTimes = Object.keys(cheerCollection).reduce((obj, key)=>{obj[key]= []; return obj}, {});
+const cheerTimes = Object.keys(cheerCollection).reduce((obj, key) => { obj[key] = []; return obj }, {});
 
 const isInWindow = (reaction, ref_ts, event_ts) => {
     const diff = ref_ts - event_ts;
@@ -96,10 +126,8 @@ const updateCheerTimes = () => {
     }
 }
 
-const CHEER_UPDATE_INTERVAL = 250;
 setInterval(updateCheerTimes, CHEER_UPDATE_INTERVAL);
 
-// TODO: Move this to a server 
 const getCheerCounts = () => {
     const cheerCounts = {};
     for (let reaction in cheerCollection) {
@@ -109,40 +137,22 @@ const getCheerCounts = () => {
     return cheerCounts;
 }
 
-app.event('reaction_added', async ({ context, event }) => {
-    console.log('\n Added Reaction: ', event.reaction, event.event_ts);
-    eventHandler.emit('cheered', event);
+// initialize the installProvider
+const installer = new InstallProvider({
+    clientId: process.env.SLACK_CLIENT_ID,
+    clientSecret: process.env.SLACK_CLIENT_SECRET,
+    stateSecret: 'my-state-secret'
 });
-
-app.event('reaction_removed', async ({ context, event }) => {
-    console.log('\n Removed Reaction: ', event.reaction, event.event_ts);
-    eventHandler.emit('cheered', event);
-});
-
-
-eventHandler.on('cheered', function ({ reaction }) {
-    // let only supported reactions pass through -
-    if (!cheerCollection[reaction])
-        return;
-
-    // get server time
-    const server_ts = Date.now();
-    cheerTimes[reaction] = cheerTimes[reaction] || [];
-    // Nope -  need mutex lock here?
-    // > JS is single-threaded and it won't switch between function bodies without reaching its return statement :
-    cheerTimes[reaction].push(server_ts);
-});
-
-(async () => {
-    // Start your app
-    await app.start(BOT_PORT);
-    console.log('⚡️ Bolt app is running!');
-})();
-
 // also listen to /cheers to return cheer counts per reaction
 https
     .createServer((req, res) => {
-        console.log("Cheeer server received request: ", req.method);
+        const path = url.parse(req.url).pathname;
+        if (path === "/slack/oauth_redirect"){
+            console.log("Handling oauth callback");
+            installer.handleCallback(req, res);
+            return;
+        }
+        console.log("Cheer server received request: ", path);
         res.writeHead(200, { 'Content-Type': 'Application/json' });
         res.write(JSON.stringify(getCheerCounts(), null, 2));
         res.end();
@@ -153,8 +163,20 @@ https
         console.log(`cheer server is listening on ${SERVER_PORT}`);
     });
 
-const proxy = httpProxy.createProxy();
+
+
+/* PROXY SERVER */
 const HOTEL_PORT = 5017;
+const proxy = httpProxy.createProxy();
+const proxyRules = new HttpProxyRules({
+    rules: {
+        "/slack/events": `http://localhost:${BOT_PORT}/slack/events`,
+        "/slack/oauth_redirect": `http://localhost:${SERVER_PORT}/slack/oauth_redirect`,
+        "/cheers": `http://localhost:${SERVER_PORT}/cheers`,
+        "/": `http://localhost:${CLIENT_PORT}/`
+    },
+    default: `http://localhost:${BOT_PORT}`
+});
 
 https
     .createServer((req, res) => {

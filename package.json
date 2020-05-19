@@ -5,12 +5,13 @@
   "description": "Play applause/laughter/custom sounds based on slack reaction counts",
   "main": "index.js",
   "scripts": {
-    "dev": "echo 'client url: https://cheers-bot.mindtickle.test' && concurrently 'ssh -R cheers-bot:80:localhost:3000 serveo.net'",
+    "dev": "echo 'client url: https://cheers-bot.mindtickle.test' && concurrently 'ssh -R cheers-bot:80:localhost:5017 serveo.net'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "ISC",
   "dependencies": {
     "@slack/bolt": "^2.0.0",
+    "@slack/oauth": "^1.0.0",
     "concurrently": "^5.2.0",
     "dotenv": "^8.2.0",
     "http": "^0.0.1-security",
