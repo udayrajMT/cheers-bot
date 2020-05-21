@@ -5,7 +5,7 @@
   "description": "Give voice to your slack reactions!",
   "main": "index.js",
   "scripts": {
-    "start": "echo 'client url: https://cheers-bot.mindtickle.test \nstarting portforwarding...' && ssh -q -R cheers-bot:80:localhost:5017 serveo.net",
+    "start": "ssh -q -R cheers-bot:80:localhost:5017 serveo.net",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "ISC",
