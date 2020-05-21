@@ -38,7 +38,7 @@ app.event('reaction_removed', async ({ context, event }) => {
 
 eventHandler.on('cheered', function ({ reaction }) {
     // let only supported reactions pass through -
-    if (!cheerCollection[reaction])
+    if (!cheersConfig[reaction])
         return;
 
     // get server time
@@ -59,7 +59,6 @@ eventHandler.on('cheered', function ({ reaction }) {
 
 /* CHEER SERVER */
 const CHEER_UPDATE_INTERVAL = 250;
-
 
 // No need! timestamp should be the only criterion - // How to get most recent message -
 
@@ -85,43 +84,35 @@ Okay how to implement it?
                 >> No need to use event_ts, current ts should suffice and is correct approach(doesn't depend on errors in event_ts)
     > Need to use real time api then!
         > change to it later. First make a prototype to see it for yourself
-            > COZ DELAY WILL MATTER. 
+           // > COZ DELAY WILL MATTER. 
 
         > Webpage to display each update - this server should return data on a request?!
         > webpage itself would play the sounds
-            firstly do it for a trigger(>5) and volume(scaled in decibles)
+            //firstly do it for a trigger(>5) and volume(scaled in decibles)
                 >
  */
 
 
-// This object will be shared by client and server
-const cheerCollection = {
+// The keys in this object will be shared by client and server
+const cheersConfig = {
     "clap": {
-        "name": "Applause",
-        // "file": applauseFile,
         "time_window": 10000,
-        "trigger_count": 1,
-        "scale": "linear"
     },
     "joy": {
-        "name": "Laughter",
-        // "file": laughterFile,
         "time_window": 10000,
-        "trigger_count": 1,
-        "scale": "linear"
     }
 };
 
-const cheerTimes = Object.keys(cheerCollection).reduce((obj, key) => { obj[key] = []; return obj }, {});
+const cheerTimes = Object.keys(cheersConfig).reduce((obj, key) => { obj[key] = []; return obj }, {});
 
 const isInWindow = (reaction, ref_ts, event_ts) => {
     const diff = ref_ts - event_ts;
-    return diff < cheerCollection[reaction]["time_window"];
+    return diff < cheersConfig[reaction]["time_window"];
 }
 
 const updateCheerTimes = () => {
     const ref_ts = Date.now();
-    for (let reaction in cheerCollection) {
+    for (let reaction in cheersConfig) {
         cheerTimes[reaction] = cheerTimes[reaction].filter((event_ts) => isInWindow(reaction, ref_ts, event_ts));
     }
 }
@@ -130,7 +121,7 @@ setInterval(updateCheerTimes, CHEER_UPDATE_INTERVAL);
 
 const getCheerCounts = () => {
     const cheerCounts = {};
-    for (let reaction in cheerCollection) {
+    for (let reaction in cheersConfig) {
         cheerCounts[reaction] = cheerTimes[reaction].length;
         console.log(reaction, cheerCounts[reaction]);
     }
