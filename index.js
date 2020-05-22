@@ -98,7 +98,7 @@ const cheersConfig = {
     "clap": {
         // TODO Thinking: Implement this to increase receive time, while keeping expiry same.
         // "keep_alive_window": 40000,
-        "expire_time": 3000, // gap in consecutive event
+        "expire_time": 4000, // gap in consecutive event
     },
     "joy": {
         "expire_time": 3000,
