@@ -96,10 +96,12 @@ Okay how to implement it?
 // The keys in this object will be shared by client and server
 const cheersConfig = {
     "clap": {
-        "time_window": 10000,
+        // TODO Thinking: Implement this to increase receive time, while keeping expiry same.
+        // "keep_alive_window": 40000,
+        "expire_time": 3000, // gap in consecutive event
     },
     "joy": {
-        "time_window": 10000,
+        "expire_time": 3000,
     }
 };
 
@@ -107,7 +109,7 @@ const cheerTimes = Object.keys(cheersConfig).reduce((obj, key) => { obj[key] = [
 
 const isInWindow = (reaction, ref_ts, event_ts) => {
     const diff = ref_ts - event_ts;
-    return diff < cheersConfig[reaction]["time_window"];
+    return diff < cheersConfig[reaction]["expire_time"];
 }
 
 const updateCheerTimes = () => {

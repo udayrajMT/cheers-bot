@@ -8,7 +8,6 @@ export const audioPlayer = (wrapper, audioPath, loop = false) => {
   wrapper.appendChild(audioElement);
 
   const play = () => {
-    audioElement.currentTime = 0;
     audioElement.play();
   };
 

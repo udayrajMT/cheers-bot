@@ -15,7 +15,7 @@ module.exports = {
             { test: /\.(js)$/, use: 'babel-loader' },
             { test: /\.css$/, use: ['style-loader', 'css-loader'] },
             {
-                test: /\.mp3$/,
+                test: /\.(mp3|wav|ogg)$/,
                 include: Dir.SRC,
                 loader: 'file-loader'
             }
